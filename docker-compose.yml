@@ -5,7 +5,7 @@ services:
   # =======================
   postgres:
     profiles:
-      - core
+      - postgres
     image: postgres:${POSTGRES_VERSION:-15}
     container_name: swe-postgres
     restart: unless-stopped
@@ -28,7 +28,7 @@ services:
   # =======================
   mongo:
     profiles:
-      - nosql
+      - mongo
     image: mongo:${MONGO_VERSION:-6}
     container_name: swe-mongo
     restart: unless-stopped
@@ -50,7 +50,7 @@ services:
   # =======================
   minio:
     profiles:
-      - s3
+      - minio
     image: minio/minio
     container_name: swe-minio
     restart: unless-stopped
@@ -74,7 +74,7 @@ services:
   # =======================
   redis:
     profiles:
-      - core
+      - redis
     image: redis:${REDIS_VERSION:-7}
     container_name: swe-redis
     restart: unless-stopped
@@ -92,7 +92,7 @@ services:
   # =======================
   zookeeper:
     profiles:
-      - core
+      - kafka
     image: debezium/zookeeper:${DEBEZIUM_VERSION:-2.5}
     container_name: swe-zookeeper
     restart: unless-stopped
@@ -112,7 +112,7 @@ services:
   # =======================
   kafka:
     profiles:
-      - core
+      - kafka
     image: debezium/kafka:${DEBEZIUM_VERSION:-2.5}
     container_name: swe-kafka
     restart: unless-stopped
@@ -140,7 +140,7 @@ services:
   # =======================
   kafka-ui:
     profiles:
-      - ui
+      - kafka
     image: tchiotludo/akhq:0.24.0
     container_name: swe-kafka-ui
     restart: unless-stopped
@@ -190,7 +190,7 @@ services:
   # =======================
   keycloak:
     profiles:
-      - auth
+      - keycloak
     image: quay.io/keycloak/keycloak:${KEYCLOAK_VERSION:-24}
     container_name: swe-keycloak
     command: start-dev
@@ -236,7 +236,7 @@ services:
   # =======================
   temporal:
     profiles:
-      - elk
+      - temporal
     image: temporalio/auto-setup:${TEMPORAL_VERSION:-1.20.0}
     container_name: temporal
     depends_on: [ postgres, elasticsearch ]
@@ -265,7 +265,7 @@ services:
   # =======================
   temporal-ui:
     profiles:
-      - elk
+      - temporal
     image: temporalio/ui:${TEMPORAL_UI_VERSION:-2.10.3}
     container_name: temporal-ui
     ports:
@@ -280,10 +280,37 @@ services:
           memory: 256M
     networks: [ swe-network ]
 
+  # =======================
+  # N8N
+  # =======================
+  n8n:
+    profiles:
+      - n8n
+    image: n8nio/n8n:latest
+    container_name: swe-n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      N8N_BASIC_AUTH_ACTIVE: "true"
+      N8N_BASIC_AUTH_USER: admin
+      N8N_BASIC_AUTH_PASSWORD: admin
+      N8N_HOST: localhost
+      N8N_PORT: 5678
+      N8N_PROTOCOL: http
+    volumes:
+      - n8n-data:/home/node/.n8n
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    networks: [ swe-network ]
+
 volumes:
   swe-postgres:
   swe-mongo:
   minio-storage:
+  n8n-data:
 
 networks:
   swe-network:
